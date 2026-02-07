@@ -7,7 +7,7 @@ package frc.robot;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.commands.Autos;
 import frc.robot.commands.ExampleCommand;
-import frc.robot.subsystems.ExampleSubsystem;
+import frc.robot.subsystems.SwerveSubsystem;
 import frc.robot.subsystems.SwerveSubsystem;
 import swervelib.SwerveDrive;
 import swervelib.SwerveInputStream;
@@ -29,27 +29,39 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
  */
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
-  private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
+  private final SwerveSubsystem drivebase = new SwerveSubsystem();
   
 
   // Replace with CommandPS4Controller or CommandJoystick if needed
   private final CommandJoystick m_driverController =
       new CommandJoystick(OperatorConstants.kDriverControllerPort);
+
+  private final CommandJoystick m_rotController =
+      new CommandJoystick(OperatorConstants.kRotControllerPort);
   //private final SwerveDrive drivebase = new SwerveDrive(null, null, 4, null); //Guesstimated Speed
-  private final SwerveSubsystem       drivebase  = new SwerveSubsystem();
-  
-  SwerveInputStream driveAngularVelocity = SwerveInputStream.of(drivebase.getSwerveDrive(),
-                                                                () -> m_driverController.getY() * -1,
-                                                                () -> m_driverController.getX() * -1)
-                                                            .withControllerRotationAxis(() -> m_driverController.getRawAxis(1))
-                                                            .deadband(OperatorConstants.DEADBAND)
-                                                            .scaleTranslation(0.8);
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     // Configure the trigger bindings
     configureBindings();
+    drivebase.setDefaultCommand(driveFieldOrientedAngularVelocity);
   }
+
+  SwerveInputStream driveAngularVelocity = SwerveInputStream.of(drivebase.getSwerveDrive(),
+                                                                () -> m_driverController.getY() * 1,
+                                                                () -> m_driverController.getX() * 1)
+                                                            .withControllerRotationAxis(() -> m_rotController.getRawAxis(0))
+                                                            .deadband(OperatorConstants.DEADBAND)
+                                                            .scaleTranslation(0.8)
+                                                            .allianceRelativeControl(true);
+
+    SwerveInputStream driveDirectAngle = driveAngularVelocity.copy().withControllerHeadingAxis(m_driverController::getX,
+                                                                                               m_driverController::getY)
+                                                           .headingWhile(true);
+
+    Command driveFieldOrientedDirectAngle = drivebase.driveFieldOriented(driveDirectAngle);
+    Command driveFieldOrientedAngularVelocity = drivebase.driveFieldOriented(driveAngularVelocity);
+
 
   /**
    * Use this method to define your trigger->command mappings. Triggers can be created via the
@@ -62,12 +74,9 @@ public class RobotContainer {
    */
   private void configureBindings() {
     // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
-    new Trigger(m_exampleSubsystem::exampleCondition)
-        .onTrue(new ExampleCommand(m_exampleSubsystem));
 
     // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
     // cancelling on release.
-    m_driverController.button(1).whileTrue(m_exampleSubsystem.exampleMethodCommand());
   }
 
   /**
@@ -77,6 +86,6 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     // An example command will be run in autonomous
-    return Autos.exampleAuto(m_exampleSubsystem);
+    return Autos.exampleAuto(drivebase);
   }
 }
