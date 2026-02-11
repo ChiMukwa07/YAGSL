@@ -12,6 +12,8 @@ import static edu.wpi.first.units.Units.Meter;
 import java.io.File;
 import java.util.function.Supplier;
 
+import com.ctre.phoenix6.swerve.jni.SwerveJNI.ModulePosition;
+
 import edu.wpi.first.wpilibj.Filesystem;
 import swervelib.parser.SwerveParser;
 import swervelib.telemetry.SwerveDriveTelemetry;
@@ -92,5 +94,9 @@ public SwerveSubsystem() {
     return run(() ->{
       swerveDrive.driveFieldOriented(velocity.get());
     });
+  }
+
+  public Command lock() {
+    return run(() -> swerveDrive.lockPose());
   }
 }

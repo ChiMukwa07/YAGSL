@@ -17,8 +17,10 @@ import java.util.function.DoubleSupplier;
 
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 /**
@@ -38,7 +40,8 @@ public class RobotContainer {
 
   private final CommandJoystick m_rotController =
       new CommandJoystick(OperatorConstants.kRotControllerPort);
-  //private final SwerveDrive drivebase = new SwerveDrive(null, null, 4, null); //Guesstimated Speed
+
+
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -48,9 +51,9 @@ public class RobotContainer {
   }
 
   SwerveInputStream driveAngularVelocity = SwerveInputStream.of(drivebase.getSwerveDrive(),
-                                                                () -> m_driverController.getY() * -1,
-                                                                () -> m_driverController.getX() * -1)
-                                                            .withControllerRotationAxis(() -> m_rotController.getRawAxis(0)* -1)
+                                                                () -> m_driverController.getY() * 1,
+                                                                () -> m_driverController.getX() * 1)
+                                                            .withControllerRotationAxis(() -> m_rotController.getX() * -1)
                                                             .deadband(OperatorConstants.DEADBAND)
                                                             .scaleTranslation(0.8)
                                                             .allianceRelativeControl(true);
@@ -73,10 +76,7 @@ public class RobotContainer {
    * joysticks}.
    */
   private void configureBindings() {
-    // Schedule `ExampleCommand` when `exampleCondition` changes to `true`
-
-    // Schedule `exampleMethodCommand` when the Xbox controller's B button is pressed,
-    // cancelling on release.
+    m_driverController.button(2).whileTrue(Commands.run(drivebase::lock, drivebase).repeatedly());
   }
 
   /**
