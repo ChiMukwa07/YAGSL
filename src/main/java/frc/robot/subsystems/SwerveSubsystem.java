@@ -16,20 +16,30 @@ import com.ctre.phoenix6.swerve.jni.SwerveJNI.ModulePosition;
 
 import edu.wpi.first.wpilibj.Filesystem;
 import swervelib.parser.SwerveParser;
+import swervelib.parser.json.ModuleJson;
 import swervelib.telemetry.SwerveDriveTelemetry;
 import swervelib.telemetry.SwerveDriveTelemetry.TelemetryVerbosity;
 import swervelib.SwerveDrive;
 import swervelib.SwerveInputStream;
+import swervelib.SwerveModule;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 
+import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
+
 public class SwerveSubsystem extends SubsystemBase {
   /** Creates a new ExampleSubsystem. */
 File directory = new File(Filesystem.getDeployDirectory(),"swerve");
+// File fL = new File(Filesystem.getDeployDirectory(),"frontLeft");
+// File fR = new File(Filesystem.getDeployDirectory(),"frontRight");
+// File bL = new File(Filesystem.getDeployDirectory(),"backLeft");
+// File bR = new File(Filesystem.getDeployDirectory(),"backRight");
 SwerveDrive swerveDrive;
+// SwerveModule[] swerveModules;
   
 
 public SwerveSubsystem() {
@@ -39,6 +49,9 @@ public SwerveSubsystem() {
       swerveDrive = new SwerveParser(directory).createSwerveDrive(Constants.maxSpeed, new Pose2d(new Translation2d(Meter.of(1),
                                                                                                                   Meter.of(4)),
                                                                                                                   Rotation2d.fromDegrees(0)));
+        
+      // Obtain the modules from the parsed SwerveDrive instead of calling a non-existent method on SwerveParser.
+      // swerveModules = new SwerveModule[4];
       // Alternative method if you don't want to supply the conversion factor via JSON files.
       // swerveDrive = new SwerveParser(directory).createSwerveDrive(maximumSpeed, angleConversionFactor, driveConversionFactor);
     } catch (Exception e)
@@ -97,6 +110,26 @@ public SwerveSubsystem() {
   }
 
   public Command lock() {
-    return run(() -> swerveDrive.lockPose());
+    return run( () -> {
+      swerveDrive.lockPose();
+      // swerveModules[0].setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(45)), false, true);
+      // swerveModules[1].setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(-45)), false, true);
+      // swerveModules[2].setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(-45)), false, true);
+      // swerveModules[3].setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(45)), false, true);
+    });
+  }
+  public Command strafeLeft() {
+    return run( () -> {
+      for (SwerveModule module : swerveDrive.getModules()) {
+        module.setDesiredState(new SwerveModuleState(0.5, Rotation2d.fromDegrees(90)), false, true);
+      }
+    });
+  }
+  public Command strafeRight() {
+    return run( () -> {
+      for (SwerveModule module : swerveDrive.getModules()) {
+        module.setDesiredState(new SwerveModuleState(-0.5, Rotation2d.fromDegrees(90)), false, true);
+      }
+    });
   }
 }
