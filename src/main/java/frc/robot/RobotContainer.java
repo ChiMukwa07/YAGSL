@@ -16,11 +16,13 @@ import java.io.File;
 import java.util.function.DoubleSupplier;
 
 import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.RunCommand;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
@@ -34,7 +36,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
  */
 public class RobotContainer {
   // The robot's subsystems and commands are defined here...
-  private final SwerveSubsystem drivebase = new SwerveSubsystem();
+  public final SwerveSubsystem drivebase = new SwerveSubsystem();
   
 
   // Replace with CommandPS4Controller or CommandJoystick if needed
@@ -44,16 +46,27 @@ public class RobotContainer {
   private final CommandJoystick m_rotController =
       new CommandJoystick(OperatorConstants.kRotControllerPort);
 
-  boolean FieldOriented = true;
+  public static boolean FieldOriented = true;
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     // Configure the trigger bindings
     configureBindings();
-    drivebase.setDefaultCommand(driveFieldOrientedAngularVelocity);
+    //drivebase.setDefaultCommand(driveFieldOrientedAngularVelocity);
+drivebase.setDefaultCommand(
+    drivebase.run(() -> {
+        ChassisSpeeds speeds = driveAngularVelocity.get(); // Get the current speeds from the SwerveInputStream
+        if (FieldOriented) {
+            drivebase.getSwerveDrive().driveFieldOriented(speeds);
+        } else {
+            drivebase.getSwerveDrive().drive(speeds); // Robot oriented
+        }
+    })
+);
+    // new RunCommand(() -> driveFieldOrientedAngularVelocity.schedule(), drivebase).repeatedly();
   }
 
-  SwerveInputStream driveAngularVelocity = SwerveInputStream.of(drivebase.getSwerveDrive(),
+  public SwerveInputStream driveAngularVelocity = SwerveInputStream.of(drivebase.getSwerveDrive(),
                                                                 () -> m_driverController.getY() * 1,
                                                                 () -> m_driverController.getX() * 1)
                                                             .withControllerRotationAxis(() -> m_rotController.getX() * -1)
@@ -85,7 +98,11 @@ public class RobotContainer {
     m_rotController.button(3).debounce(0.1).whileTrue(new InstantCommand(() -> drivebase.getSwerveDrive().setGyroOffset(new Rotation3d(0, 0, Math.toRadians(90))))); //gyro reset
     m_driverController.button(4).whileTrue(drivebase.strafeLeft());
     m_driverController.button(5).whileTrue(drivebase.strafeRight());
-    m_rotController.button(2).whileTrue(new InstantCommand(() -> FieldOriented = false));
+
+    m_rotController.button(2).onTrue(new InstantCommand(() -> FieldOriented = !FieldOriented)); 
+      // .andThen(new InstantCommand(() -> drivebase.removeDefaultCommand()))
+      // .andThen(new InstantCommand(() -> drivebase.setDefaultCommand(driveFieldOrientedAngularVelocity)))); //toggle robot-oriented control
+
     //m_driverController.button(1).whileTrue(new InstantCommand(() -> driveAngularVelocity.scaleTranslation(0.4)));
     //m_rotController.button(3).whileTrue(new InstantCommand(() -> driveAngularVelocity.allianceRelativeControl(false)));
   }
