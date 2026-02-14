@@ -94,8 +94,8 @@ drivebase.setDefaultCommand(
    */
   private void configureBindings() {
     m_driverController.button(2).whileTrue(drivebase.lock());
-    m_driverController.button(3).debounce(0.1).whileTrue(new InstantCommand(() -> drivebase.getSwerveDrive().zeroGyro())); //gyro reset
-    m_rotController.button(3).debounce(0.1).whileTrue(new InstantCommand(() -> drivebase.getSwerveDrive().setGyroOffset(new Rotation3d(0, 0, Math.toRadians(90))))); //gyro reset
+    m_driverController.button(3).whileTrue(new InstantCommand(() -> drivebase.getSwerveDrive().zeroGyro())); //gyro reset
+    m_rotController.button(3).debounce(0.1).whileTrue(new InstantCommand(() -> drivebase.getSwerveDrive().setGyro(new Rotation3d(0,0,Math.toRadians(90))))); //gyro offset
     m_driverController.button(4).whileTrue(drivebase.strafeLeft());
     m_driverController.button(5).whileTrue(drivebase.strafeRight());
 

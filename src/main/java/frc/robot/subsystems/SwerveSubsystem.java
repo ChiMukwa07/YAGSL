@@ -121,10 +121,6 @@ public class SwerveSubsystem extends SubsystemBase {
   public Command lock() {
     return run( () -> {
       swerveDrive.lockPose();
-      // swerveModules[0].setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(45)), false, true);
-      // swerveModules[1].setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(-45)), false, true);
-      // swerveModules[2].setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(-45)), false, true);
-      // swerveModules[3].setDesiredState(new SwerveModuleState(0, Rotation2d.fromDegrees(45)), false, true);
     });
   }
   public Command strafeLeft() {
